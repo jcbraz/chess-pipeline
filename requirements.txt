@@ -1,1 +1,17 @@
 # Astro Runtime includes the following pre-installed providers packages: https://docs.astronomer.io/astro/runtime-image-architecture#provider-packages
+boto3==1.35.10
+botocore==1.35.10
+jmespath==1.0.1
+numpy==2.1.0
+pandas==2.2.2
+progressbar==2.5
+py4j==0.10.9.7
+pyspark==3.5.2
+python-dateutil==2.9.0.post0
+pytz==2024.1
+s3transfer==0.10.2
+six==1.16.0
+tqdm==4.66.5
+tzdata==2024.1
+urllib3==2.2.2
+zstandard==0.23.0

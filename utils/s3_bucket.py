@@ -25,7 +25,7 @@ class S3Bucket:
             aws_secret_access_key=self.secret_access_key,
         )
 
-    def get_object(self, object_key: str):
+    def get(self, object_key: str):
         """
         Gets the object.
 
@@ -49,7 +49,6 @@ class S3Bucket:
             raise
         else:
             return body
-
 
 
     def put(self, data: Any, object_key: str):
@@ -106,14 +105,28 @@ class S3Bucket:
             if getattr(put_data, "close", None):
                 put_data.close()
 
-ds3 = S3Bucket(
-    bucket_name="chess-pipeline",
-    region="eu-west-1",
-    access_key_id=os.environ["S3_ACCESS_KEY_ID"],
-    secret_access_key=os.environ["S3_SECRET_ACCESS_KEY"],
-)
 
-ds3.put(
-    object_key="lichess_standard_rated_2021-08.pgn.zst",
-    data="./data/Lichess_Standard_Rated_2024-08.pgn.zst",
-)
+    def check_key_existence(self, object_key: str) -> bool:
+        """
+        Checks if the object key exists in the bucket.
+
+        :return: True if the object key exists, False otherwise.
+        """
+        try:
+            bucket_objects = self.client.list_objects_v2(Bucket=self.bucket_name)
+            if "Contents" in bucket_objects:
+                return any(obj["Key"] == object_key for obj in bucket_objects["Contents"])
+            return False
+        except ClientError:
+            logger.exception("Couldn't get S3 resource.")
+            return False
+
+
+# ds3 = S3Bucket(
+#     bucket_name="chess-pipeline",
+#     access_key_id=os.environ["S3_ACCESS_KEY_ID"],
+#     secret_access_key=os.environ["S3_SECRET_ACCESS_KEY"],
+#     region="eu-west-1"
+# )
+
+# print(ds3.check_key_existence(object_key="lichess_standard_rated_2024-08.pgn.zst"))
