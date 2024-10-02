@@ -7,7 +7,8 @@ from pyspark.errors import PySparkException
 
 
 @dataclass
-class LoaderGamesFromS3:
+class S3Bucket:
+    spark: SparkSession
     object_key: str
     s3_access_key: str
     s3_secret_key: str
@@ -15,19 +16,11 @@ class LoaderGamesFromS3:
     bucket_name: str
     endpoint: str
 
-    def __post_init__(self):
-        self.spark = SparkSession.builder.appName("ChessGamesReader").getOrCreate()
-
-        self.spark.conf.set("fs.s3a.access.key", self.s3_access_key)
-        self.spark.conf.set("fs.s3a.secret.key", self.s3_secret_key)
-        self.spark.conf.set("fs.s3a.endpoint", self.endpoint)
-
     def load_games_dataframe_from_s3(self) -> Union[DataFrame, None]:
         """
         Load an object from the bucket.
 
-        :param object_key: The key of the object to load.
-        :return: The object data.
+        :param self: class self
         """
         try:
             logging.info(
@@ -49,3 +42,20 @@ class LoaderGamesFromS3:
         except PySparkException as e:
             logging.error("An error occurred while loading the object: %s", str(e))
             return None
+
+    def load_games_to_s3(self, df_to_upload: DataFrame, bucket_key: str) -> None:
+        """
+        Load formatted games back into S3 Bucket
+
+        :param self: class self
+        """
+        try:
+            logging.info("Loading Dataframe to bucket '%s", self.bucket_name)
+
+            bucket_url_to_hit = f"s3a://{self.bucket_name}/{bucket_key}.parquet"
+            df_to_upload.write.parquet(path=bucket_url_to_hit, mode="overwrite")
+
+        except PySparkException as e:
+            logging.error(
+                "An error ocurred uploading dataframe to bucket '%s", e.message
+            )
